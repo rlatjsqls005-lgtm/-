@@ -1,0 +1,27 @@
+// !$*UTF8*$!
+{
+ archiveVersion = 1;
+ classes = { };
+ objectVersion = 77;
+ objects = {
+  111111111111111111111111 /* TradeBookApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeBookApp.swift; sourceTree = "<group>";};
+  222222222222222222222222 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>";};
+  333333333333333333333333 /* TradeBook.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TradeBook.app; sourceTree = BUILT_PRODUCTS_DIR;};
+  444444444444444444444444 = {isa = PBXBuildFile; fileRef = 111111111111111111111111;};
+  555555555555555555555555 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;};
+  666666666666666666666666 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (444444444444444444444444,); runOnlyForDeploymentPostprocessing = 0;};
+  777777777777777777777777 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;};
+  888888888888888888888888 = {isa = PBXNativeTarget; buildConfigurationList = 999999999999999999999999; buildPhases = (666666666666666666666666,555555555555555555555555,777777777777777777777777); buildRules = (); dependencies = (); name = TradeBook; productName = TradeBook; productReference = 333333333333333333333333; productType = "com.apple.product-type.application";};
+  AAAAAAAAAAAAAAAAAAAAAAAA = {isa = PBXProject; buildConfigurationList = BBBBBBBBBBBBBBBBBBBBBBBB; compatibilityVersion = "Xcode 16.0"; developmentRegion = en; hasScannedForEncodings = 0; mainGroup = CCCCCCCCCCCCCCCCCCCCCCCC; productRefGroup = DDDDDDDDDDDDDDDDDDDDDDDD; projectDirPath = ""; projectRoot = ""; targets = (888888888888888888888888,);};
+  CCCCCCCCCCCCCCCCCCCCCCCC = {isa = PBXGroup; children = (EEEEEEEEEEEEEEEEEEEEEEEE,); sourceTree = "<group>";};
+  DDDDDDDDDDDDDDDDDDDDDDDD = {isa = PBXGroup; children = (333333333333333333333333,); name = Products; sourceTree = "<group>";};
+  EEEEEEEEEEEEEEEEEEEEEEEE = {isa = PBXGroup; children = (111111111111111111111111,222222222222222222222222); path = ios/TradeBook; sourceTree = "<group>";};
+  999999999999999999999999 = {isa = XCConfigurationList; buildConfigurations = (F11111111111111111111111,F22222222222222222222222); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+  BBBBBBBBBBBBBBBBBBBBBBBB = {isa = XCConfigurationList; buildConfigurations = (F33333333333333333333333,F44444444444444444444444); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+  F11111111111111111111111 = {isa = XCBuildConfiguration; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = com.example.tradebook; PRODUCT_NAME = "$(TARGET_NAME)"; INFOPLIST_FILE = ios/TradeBook/Info.plist; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; IPHONEOS_DEPLOYMENT_TARGET = 16.0; SDKROOT = iphoneos;}; name = Debug;};
+  F22222222222222222222222 = {isa = XCBuildConfiguration; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = com.example.tradebook; PRODUCT_NAME = "$(TARGET_NAME)"; INFOPLIST_FILE = ios/TradeBook/Info.plist; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; IPHONEOS_DEPLOYMENT_TARGET = 16.0; SDKROOT = iphoneos;}; name = Release;};
+  F33333333333333333333333 = {isa = XCBuildConfiguration; buildSettings = {PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0;}; name = Debug;};
+  F44444444444444444444444 = {isa = XCBuildConfiguration; buildSettings = {PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0;}; name = Release;};
+ };
+ rootObject = AAAAAAAAAAAAAAAAAAAAAAAA;
+}

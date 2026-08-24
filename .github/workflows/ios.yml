@@ -2,7 +2,7 @@ name: Build iOS
 
 on:
   push:
-    branches: [ ios-app ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -11,16 +11,23 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - name: Build unsigned iOS app
+      - name: Show Xcode
+        run: xcodebuild -version
+      - name: Validate project
+        run: xcodebuild -list -project TradeBook.xcodeproj
+      - name: Build iOS simulator app
         run: |
-          mkdir -p build/Payload
           xcodebuild -project TradeBook.xcodeproj -scheme TradeBook -sdk iphonesimulator -configuration Release -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO
       - name: Package app
         run: |
-          APP=$(find build/DerivedData/Build/Products -name 'TradeBook.app' -type d | head -1)
+          set -e
+          APP=$(find build/DerivedData/Build/Products -path '*iphonesimulator*' -name 'TradeBook.app' -type d | head -1)
+          test -n "$APP"
+          mkdir -p build/Payload
           cp -R "$APP" build/Payload/TradeBook.app
-          cd build && zip -r ../TradeBook-ios-unsigned.zip Payload
+          cd build
+          zip -r ../TradeBook-ios-simulator.zip Payload
       - uses: actions/upload-artifact@v4
         with:
-          name: ios-unsigned
-          path: TradeBook-ios-unsigned.zip
+          name: ios-simulator
+          path: TradeBook-ios-simulator.zip

@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -51,13 +50,17 @@ public class MainActivity extends Activity {
             prefs.edit().putString("server_url", url).apply();
         }
         loadServer(url);
+        if (Build.VERSION.SDK_INT >= 33) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,
+                    this::handleBackPressed);
+        }
     }
 
     private void buildUi() {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(Color.WHITE);
-
         LinearLayout bar = new LinearLayout(this);
         bar.setGravity(Gravity.CENTER_VERTICAL);
         bar.setPadding(dp(12), dp(6), dp(8), dp(6));
@@ -110,7 +113,6 @@ public class MainActivity extends Activity {
     private Button smallButton(String t) {
         Button b = new Button(this); b.setText(t); b.setTextSize(12); b.setAllCaps(false); b.setTextColor(Color.WHITE); b.setBackgroundColor(Color.TRANSPARENT); return b;
     }
-
     private int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+0.5f);}
 
     private void showServerDialog(boolean first) {
@@ -127,10 +129,7 @@ public class MainActivity extends Activity {
             prefs.edit().putString("server_url",url).apply(); d.dismiss(); loadServer(url);
         })); d.show();
     }
-
-    private String normalize(String s){
-        s=s.trim(); if(s.isEmpty())return ""; if(!s.startsWith("http://")&&!s.startsWith("https://"))s="https://"+s; while(s.endsWith("/"))s=s.substring(0,s.length()-1); return s;
-    }
+    private String normalize(String s){s=s.trim(); if(s.isEmpty())return ""; if(!s.startsWith("http://")&&!s.startsWith("https://"))s="https://"+s; while(s.endsWith("/"))s=s.substring(0,s.length()-1); return s;}
     private void loadServer(String url){ webView.loadUrl(normalize(url)+"/"); }
 
     private void startDownload(String url,String ua,String cd,String mime){
@@ -148,17 +147,17 @@ public class MainActivity extends Activity {
             ((DownloadManager)getSystemService(DOWNLOAD_SERVICE)).enqueue(req); Toast.makeText(this,"다운로드를 시작했습니다.",Toast.LENGTH_SHORT).show();
         }catch(Exception e){Toast.makeText(this,"다운로드 실패: "+e.getMessage(),Toast.LENGTH_LONG).show();}
     }
+    @Override public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] results){super.onRequestPermissionsResult(requestCode,permissions,results);if(requestCode==STORAGE_PERMISSION&&results.length>0&&results[0]==PackageManager.PERMISSION_GRANTED)doDownload();}
+    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(requestCode==FILE_CHOOSER&&fileCallback!=null){Uri[] out=null;if(resultCode==RESULT_OK&&data!=null&&data.getData()!=null)out=new Uri[]{data.getData()};fileCallback.onReceiveValue(out);fileCallback=null;}}
 
-    @Override public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] results){
-        super.onRequestPermissionsResult(requestCode,permissions,results);
-        if(requestCode==STORAGE_PERMISSION && results.length>0 && results[0]==PackageManager.PERMISSION_GRANTED)doDownload();
+    private void handleBackPressed() {
+        if (webView != null && webView.canGoBack()) {
+            webView.goBack();
+        } else {
+            finish();
+        }
     }
 
-    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
-        super.onActivityResult(requestCode,resultCode,data);
-        if(requestCode==FILE_CHOOSER && fileCallback!=null){Uri[] out=null;if(resultCode==RESULT_OK&&data!=null&&data.getData()!=null)out=new Uri[]{data.getData()};fileCallback.onReceiveValue(out);fileCallback=null;}
-    }
-
-    @Override public void onBackPressed(){ if(webView.canGoBack()) webView.goBack(); else super.onBackPressed(); }
-    @Override protected void onDestroy(){ if(webView!=null)webView.destroy(); super.onDestroy(); }
+    @Override public void onBackPressed(){ handleBackPressed(); }
+    @Override protected void onDestroy(){ if(Build.VERSION.SDK_INT>=33){ getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(this::handleBackPressed); } if(webView!=null)webView.destroy(); super.onDestroy(); }
 }

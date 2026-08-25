@@ -138,20 +138,23 @@ public class MainActivity extends Activity {
                 if (fileCallback != null) fileCallback.onReceiveValue(null);
                 fileCallback = callback;
 
-                // Do not provide EXTRA_MIME_TYPES here. The previous MIME allow-list
-                // made Android DocumentsUI grey out HWP/HWPX, images and other valid
-                // formats even though the web app accepts them. The web layer validates
-                // the extension after selection, so the native picker must allow all files.
-                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                // Use ACTION_GET_CONTENT instead of ACTION_OPEN_DOCUMENT. Some Android/OEM
+                // document pickers keep applying MIME filters to ACTION_OPEN_DOCUMENT and
+                // grey out valid files even when the requested type is */*. The web app
+                // performs the real extension validation after selection, so native Android
+                // should present every openable file to the user.
+                Intent i = new Intent(Intent.ACTION_GET_CONTENT);
                 i.addCategory(Intent.CATEGORY_OPENABLE);
                 i.setType("*/*");
+                i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
                 if (params != null && params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE) {
                     i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
                 }
 
                 try {
-                    startActivityForResult(i, FILE_CHOOSER);
+                    Intent chooser = Intent.createChooser(i, "파일 선택");
+                    startActivityForResult(chooser, FILE_CHOOSER);
                 } catch (Exception ex) {
                     fileCallback.onReceiveValue(null);
                     fileCallback = null;

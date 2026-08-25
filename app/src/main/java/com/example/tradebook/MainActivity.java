@@ -103,10 +103,6 @@ public class MainActivity extends Activity {
         reload.setOnClickListener(v -> webView.reload());
         bar.addView(reload);
 
-        Button server = smallButton("NAS 설정");
-        server.setOnClickListener(v -> showServerDialog(false));
-        bar.addView(server);
-
         root.addView(bar, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
@@ -142,20 +138,13 @@ public class MainActivity extends Activity {
                 if (fileCallback != null) fileCallback.onReceiveValue(null);
                 fileCallback = callback;
 
+                // Do not provide EXTRA_MIME_TYPES here. The previous MIME allow-list
+                // made Android DocumentsUI grey out HWP/HWPX, images and other valid
+                // formats even though the web app accepts them. The web layer validates
+                // the extension after selection, so the native picker must allow all files.
                 Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                 i.addCategory(Intent.CATEGORY_OPENABLE);
                 i.setType("*/*");
-                i.putExtra(Intent.EXTRA_MIME_TYPES, new String[] {
-                        "application/json",
-                        "text/json",
-                        "application/octet-stream",
-                        "text/plain",
-                        "text/csv",
-                        "application/vnd.ms-excel",
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        "application/pdf",
-                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                });
 
                 if (params != null && params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE) {
                     i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);

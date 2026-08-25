@@ -30,6 +30,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
+    private static final String DEFAULT_SERVER_URL = "https://ldril380.synology.me";
     private static final int FILE_CHOOSER = 1001;
     private static final int STORAGE_PERMISSION = 1002;
     private WebView webView;
@@ -45,7 +46,11 @@ public class MainActivity extends Activity {
         prefs = getSharedPreferences("tradebook", MODE_PRIVATE);
         buildUi();
         String url = prefs.getString("server_url", "");
-        if (url.isEmpty()) showServerDialog(true); else loadServer(url);
+        if (url.isEmpty() || url.contains("192.168.") || url.contains(":8080")) {
+            url = DEFAULT_SERVER_URL;
+            prefs.edit().putString("server_url", url).apply();
+        }
+        loadServer(url);
     }
 
     private void buildUi() {
@@ -110,9 +115,9 @@ public class MainActivity extends Activity {
 
     private void showServerDialog(boolean first) {
         EditText e = new EditText(this);
-        e.setHint("예: http://192.168.0.10:8080 또는 https://book.example.com");
+        e.setHint("https://ldril380.synology.me 또는 내부 NAS 주소");
         e.setSingleLine(true);
-        e.setText(prefs.getString("server_url", ""));
+        e.setText(prefs.getString("server_url", DEFAULT_SERVER_URL));
         int p=dp(18); LinearLayout box=new LinearLayout(this); box.setPadding(p,0,p,0); box.addView(e,new LinearLayout.LayoutParams(-1,-2));
         AlertDialog d = new AlertDialog.Builder(this).setTitle("NAS 서버 주소 설정").setMessage("PC 웹과 같은 NAS 장부 서버 주소를 입력하세요.").setView(box)
             .setPositiveButton("연결", null).setNegativeButton(first?"종료":"취소", (x,w)->{if(first)finish();}).create();
@@ -124,7 +129,7 @@ public class MainActivity extends Activity {
     }
 
     private String normalize(String s){
-        s=s.trim(); if(s.isEmpty())return ""; if(!s.startsWith("http://")&&!s.startsWith("https://"))s="http://"+s; while(s.endsWith("/"))s=s.substring(0,s.length()-1); return s;
+        s=s.trim(); if(s.isEmpty())return ""; if(!s.startsWith("http://")&&!s.startsWith("https://"))s="https://"+s; while(s.endsWith("/"))s=s.substring(0,s.length()-1); return s;
     }
     private void loadServer(String url){ webView.loadUrl(normalize(url)+"/"); }
 

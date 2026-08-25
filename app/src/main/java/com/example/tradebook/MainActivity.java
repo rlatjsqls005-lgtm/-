@@ -13,7 +13,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowInsets;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
 import android.webkit.URLUtil;
@@ -42,6 +45,7 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle b) {
         super.onCreate(b);
+        configureSystemBars();
         prefs = getSharedPreferences("tradebook", MODE_PRIVATE);
         buildUi();
         String url = prefs.getString("server_url", "");
@@ -57,10 +61,30 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void configureSystemBars() {
+        Window w = getWindow();
+        if (Build.VERSION.SDK_INT >= 21) {
+            w.setStatusBarColor(Color.rgb(32, 33, 36));
+            w.setNavigationBarColor(Color.WHITE);
+        }
+        if (Build.VERSION.SDK_INT >= 23) {
+            w.getDecorView().setSystemUiVisibility(0);
+        }
+    }
+
     private void buildUi() {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(Color.WHITE);
+        root.setFitsSystemWindows(true);
+        if (Build.VERSION.SDK_INT >= 30) {
+            root.setOnApplyWindowInsetsListener((v, insets) -> {
+                android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
+                v.setPadding(0, bars.top, 0, bars.bottom);
+                return insets;
+            });
+        }
+
         LinearLayout bar = new LinearLayout(this);
         bar.setGravity(Gravity.CENTER_VERTICAL);
         bar.setPadding(dp(12), dp(6), dp(8), dp(6));
@@ -151,13 +175,8 @@ public class MainActivity extends Activity {
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){super.onActivityResult(requestCode,resultCode,data);if(requestCode==FILE_CHOOSER&&fileCallback!=null){Uri[] out=null;if(resultCode==RESULT_OK&&data!=null&&data.getData()!=null)out=new Uri[]{data.getData()};fileCallback.onReceiveValue(out);fileCallback=null;}}
 
     private void handleBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            finish();
-        }
+        if (webView != null && webView.canGoBack()) webView.goBack(); else finish();
     }
-
     @Override public void onBackPressed(){ handleBackPressed(); }
-    @Override protected void onDestroy(){ if(Build.VERSION.SDK_INT>=33){ getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(this::handleBackPressed); } if(webView!=null)webView.destroy(); super.onDestroy(); }
+    @Override protected void onDestroy(){ if(webView!=null)webView.destroy(); super.onDestroy(); }
 }

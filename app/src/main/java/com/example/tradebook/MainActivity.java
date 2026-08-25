@@ -70,9 +70,7 @@ public class MainActivity extends Activity {
             w.setStatusBarColor(Color.rgb(32, 33, 36));
             w.setNavigationBarColor(Color.WHITE);
         }
-        if (Build.VERSION.SDK_INT >= 23) {
-            w.getDecorView().setSystemUiVisibility(0);
-        }
+        if (Build.VERSION.SDK_INT >= 23) w.getDecorView().setSystemUiVisibility(0);
     }
 
     private void buildUi() {
@@ -141,7 +139,6 @@ public class MainActivity extends Activity {
         webView.setWebChromeClient(new WebChromeClient() {
             @Override public boolean onShowFileChooser(
                     WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
-
                 if (fileCallback != null) fileCallback.onReceiveValue(null);
                 fileCallback = callback;
 
@@ -183,11 +180,7 @@ public class MainActivity extends Activity {
         setContentView(root);
     }
 
-    /**
-     * The NAS web app is also used from desktop. The mobile screenshots showed
-     * fixed-width navigation/content escaping the viewport, so this applies a
-     * mobile-only normalization at the WebView boundary and leaves PC layout alone.
-     */
+    /** Mobile-only repair for fixed-width/fixed-row web layouts. PC rendering is untouched. */
     private void applyResponsiveMobileFix() {
         if (webView == null) return;
 
@@ -208,13 +201,19 @@ public class MainActivity extends Activity {
                 "'button,input,select,textarea{max-width:100%!important;min-width:0!important;}'+" +
                 "'img,video,canvas,iframe{max-width:100%!important;height:auto;}'+" +
                 "'table{max-width:100%!important;}'+" +
-                "'[style*=\\\"display:flex\\\"],[style*=\\\"display: flex\\\"]{min-width:0!important;flex-wrap:wrap!important;}'+" +
                 "'nav,header{max-width:100%!important;overflow:visible!important;}'+" +
                 "'a,button{white-space:normal!important;overflow-wrap:anywhere!important;}'+" +
                 "'.container,.content,.card,.panel,.section{max-width:100%!important;min-width:0!important;}'+" +
                 "'input[type=file]{max-width:100%!important;}'+" +
                 "'@media(max-width:600px){h1{font-size:28px!important;line-height:1.2!important;}h2{font-size:24px!important;}h3{font-size:20px!important;}button{font-size:15px!important;line-height:1.2!important;padding:10px 14px!important;}}';" +
-                "document.head.appendChild(s);}" +
+                "document.head.appendChild(s);" +
+                "document.querySelectorAll('*').forEach(function(el){" +
+                "var cs=getComputedStyle(el);" +
+                "if(cs.display==='flex'||cs.display==='inline-flex'){el.style.minWidth='0';el.style.flexWrap='wrap';}" +
+                "var r=el.getBoundingClientRect();" +
+                "if(r.width>w+2 && cs.position!=='fixed' && cs.position!=='sticky'){el.style.maxWidth='100%';el.style.minWidth='0';}" +
+                "});" +
+                "}" +
                 "}catch(e){}})();";
 
         webView.evaluateJavascript(js, null);
@@ -230,9 +229,7 @@ public class MainActivity extends Activity {
         return b;
     }
 
-    private int dp(int n) {
-        return (int)(n * getResources().getDisplayMetrics().density + 0.5f);
-    }
+    private int dp(int n) { return (int)(n * getResources().getDisplayMetrics().density + 0.5f); }
 
     private void showServerDialog(boolean first) {
         EditText e = new EditText(this);
@@ -250,16 +247,12 @@ public class MainActivity extends Activity {
                 .setMessage("PC 웹과 같은 NAS 장부 서버 주소를 입력하세요.")
                 .setView(box)
                 .setPositiveButton("연결", null)
-                .setNegativeButton(first ? "종료" : "취소", (x, w) -> {
-                    if (first) finish();
-                }).create();
+                .setNegativeButton(first ? "종료" : "취소", (x, w) -> { if(first) finish(); })
+                .create();
 
         d.setOnShowListener(x -> d.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             String url = normalize(e.getText().toString());
-            if (url.isEmpty()) {
-                e.setError("서버 주소를 입력하세요.");
-                return;
-            }
+            if (url.isEmpty()) { e.setError("서버 주소를 입력하세요."); return; }
             prefs.edit().putString("server_url", url).apply();
             d.dismiss();
             loadServer(url);
@@ -275,9 +268,7 @@ public class MainActivity extends Activity {
         return s;
     }
 
-    private void loadServer(String url) {
-        webView.loadUrl(normalize(url) + "/");
-    }
+    private void loadServer(String url) { webView.loadUrl(normalize(url) + "/"); }
 
     private void startDownload(String url, String ua, String cd, String mime) {
         pendingDownloadUrl = url;
@@ -286,8 +277,7 @@ public class MainActivity extends Activity {
         pendingMimeType = mime;
 
         if (Build.VERSION.SDK_INT < 29 &&
-                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                        != PackageManager.PERMISSION_GRANTED) {
+                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, STORAGE_PERMISSION);
             return;
         }
@@ -300,13 +290,10 @@ public class MainActivity extends Activity {
             String cookie = CookieManager.getInstance().getCookie(pendingDownloadUrl);
             if (cookie != null) req.addRequestHeader("Cookie", cookie);
             if (pendingDownloadUserAgent != null) req.addRequestHeader("User-Agent", pendingDownloadUserAgent);
-
-            String name = URLUtil.guessFileName(
-                    pendingDownloadUrl, pendingContentDisposition, pendingMimeType);
+            String name = URLUtil.guessFileName(pendingDownloadUrl, pendingContentDisposition, pendingMimeType);
             req.setTitle(name);
             req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
             req.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, name);
-
             ((DownloadManager)getSystemService(DOWNLOAD_SERVICE)).enqueue(req);
             Toast.makeText(this, "다운로드를 시작했습니다.", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
@@ -314,11 +301,9 @@ public class MainActivity extends Activity {
         }
     }
 
-    @Override public void onRequestPermissionsResult(
-            int requestCode, String[] permissions, int[] results) {
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
-        if (requestCode == STORAGE_PERMISSION && results.length > 0 &&
-                results[0] == PackageManager.PERMISSION_GRANTED) doDownload();
+        if (requestCode == STORAGE_PERMISSION && results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) doDownload();
     }
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -339,7 +324,6 @@ public class MainActivity extends Activity {
                 takePersistablePermission(out[0], data.getFlags());
             }
         }
-
         fileCallback.onReceiveValue(out);
         fileCallback = null;
     }
@@ -347,17 +331,13 @@ public class MainActivity extends Activity {
     private void takePersistablePermission(Uri uri, int flags) {
         if (uri == null || Build.VERSION.SDK_INT < 19) return;
         try {
-            int takeFlags = flags &
-                    (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            int takeFlags = flags & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             getContentResolver().takePersistableUriPermission(uri, takeFlags);
-        } catch (Exception ignored) {
-            // Some providers do not offer persistable permissions.
-        }
+        } catch (Exception ignored) { }
     }
 
     private void handleBackPressed() {
-        if (webView != null && webView.canGoBack()) webView.goBack();
-        else finish();
+        if (webView != null && webView.canGoBack()) webView.goBack(); else finish();
     }
 
     @Override public void onBackPressed() { handleBackPressed(); }

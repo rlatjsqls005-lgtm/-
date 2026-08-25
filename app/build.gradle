@@ -8,12 +8,33 @@ android {
         applicationId 'com.example.tradebook'
         minSdk 24
         targetSdk 35
-        versionCode 6
-        versionName '1.5'
+        versionCode 7
+        versionName '1.6'
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+}
+
+// Rebuild the launcher PNG from text chunks before Android resource processing.
+// This changes only the app icon; the WebView/native functionality is untouched.
+def generatedLauncherIcon = file('src/main/res/drawable/app_icon.png')
+def prepareLauncherIcon = tasks.register('prepareLauncherIcon') {
+    inputs.files(fileTree('icon_src') { include 'app_icon.b64.part*' })
+    outputs.file(generatedLauncherIcon)
+    doLast {
+        def parts = fileTree('icon_src') { include 'app_icon.b64.part*' }.files.toList().sort { a, b -> a.name <=> b.name }
+        if (parts.isEmpty()) {
+            throw new GradleException('Launcher icon source chunks are missing')
+        }
+        def encoded = parts.collect { it.getText('UTF-8').trim() }.join('')
+        generatedLauncherIcon.parentFile.mkdirs()
+        generatedLauncherIcon.bytes = java.util.Base64.getDecoder().decode(encoded)
+    }
+}
+
+tasks.named('preBuild').configure {
+    dependsOn prepareLauncherIcon
 }
